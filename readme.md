@@ -46,7 +46,9 @@ This configuration supports:
 
 # Usage
 The path to the user data directory should be specified at launch.
+
 `./run-docker-compose.sh --data[folder=/mnt/data] # Starts the services`
+
 `./run-docker-compose.sh --drop # Stops the services`
 
 Point browser to https://127.0.0.1:443
