@@ -72,9 +72,13 @@ curl -k -X POST https://127.0.0.1:443/ollama/v1/chat/completions \
 Or with Python...
 ```python
 from openai import OpenAI
+import httpx
+http_client = httpx.Client(verify=False)
 
 # Initialize OpenAI client with API key
-client = OpenAI(base_url='http://127.0.0.1:3000/ollama/v1/', api_key='INSERT-OPEN-WEBUI-API-KEY')
+client = OpenAI(base_url='http://127.0.0.1:443/ollama/v1/', 
+                api_key='INSERT-OPEN-WEBUI-API-KEY',
+                http_client=http_client)
 
 def query_local_api(prompt):
     try:
