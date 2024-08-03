@@ -1,0 +1,90 @@
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:latest
+    restart: always
+    environment:
+      - 'OLLAMA_BASE_URL=http://ollama:11434'
+      - 'ENABLE_OLLAMA_API=true'
+      - 'AUDIO_TTS_OPENAI_API_BASE_URL=http://openedai-speech:8000/v1'
+      - 'AUDIO_TTS_OPENAI_API_KEY=sk-111111111'
+      - 'AUTOMATIC1111_BASE_URL=http://sdwebui:7860'
+    volumes:
+      - ${MYGPT_DATA_DIR}/open-webui:/app/backend/data
+    networks:
+      - internal
+    depends_on:
+      - ollama
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: always
+    volumes:
+      - ${MYGPT_DATA_DIR}/ollama:/root/.ollama
+    networks:
+      - internal
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - capabilities: ["gpu"]
+            driver: nvidia
+            count: all
+
+  sdwebui:
+    image: sdwebui:latest
+    restart: always
+    volumes:
+      - ${MYGPT_DATA_DIR}/sdwebui/models:/app/stable-diffusion-webui/models/
+      - ${MYGPT_DATA_DIR}/sdwebui/outputs:/app/stable-diffusion/outputs/
+    networks:
+      - internal
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - capabilities: ["gpu"]
+            driver: nvidia
+            device_ids: ["1"]
+
+  openedai-speech:
+    image: ghcr.io/matatonic/openedai-speech:latest
+    restart: always
+    volumes:
+      - ${MYGPT_DATA_DIR}/tts/tts-config:/app/config
+      - ${MYGPT_DATA_DIR}/tts/tts-voices:/app/voices
+    networks:
+      - internal
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - capabilities: ["gpu"]
+            driver: nvidia
+            device_ids: ["1"]
+
+  nginx-proxy:
+    image: nginx:latest
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ${MYGPT_DATA_DIR}/nginx/nginx_proxy.conf:/etc/nginx/nginx.conf:ro
+      - ${MYGPT_DATA_DIR}/nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - open-webui
+    networks:
+      - internal
+      - default
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  open-webui: {}
+  ollama: {}
+  openedai-speech: {}
+  nginx-proxy: {}
+  sd-next: {}
+

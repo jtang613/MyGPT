@@ -1,0 +1,31 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && apt install -y -q=2 build-essential python3.10 python3.10-venv python3-pip git rustc cargo pkg-config libssl-dev wget curl vim libgl1-mesa-glx libtcmalloc-minimal4
+
+# Create a directory for the app
+RUN mkdir -p /app/outputs/
+
+# Change to the app directory and clone the repository
+RUN cd /app && git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui
+
+# Add a new user called 'sduser' and give appropriate permissions
+RUN useradd -ms /bin/bash sduser && chown -R sduser:sduser /app
+
+RUN chown -R sduser:sduser /app/
+
+# Switch to the new user
+USER sduser
+
+# Specify the work directory
+WORKDIR /app/stable-diffusion-webui
+
+RUN python3.10 -m venv venv && . ./venv/bin/activate
+RUN pip install torch=="2.1.2" torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+RUN pip install -r requirements.txt
+
+# Run the script as non-root user
+CMD ["./webui.sh", "--api", "--listen"]
+
+EXPOSE 7860/tcp
