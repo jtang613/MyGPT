@@ -31,11 +31,11 @@ services:
             count: all
 
   sdwebui:
-    image: sdwebui:latest
+    image: forge:latest
     restart: always
     volumes:
-      - ${MYGPT_DATA_DIR}/sdwebui/models:/app/stable-diffusion-webui/models/
-      - ${MYGPT_DATA_DIR}/sdwebui/outputs:/app/stable-diffusion/outputs/
+      - ${MYGPT_DATA_DIR}/sdwebui/models:/app/stable-diffusion-webui-forge/models/
+      - ${MYGPT_DATA_DIR}/sdwebui/outputs:/app/stable-diffusion-webui-forge/outputs/
     networks:
       - internal
     deploy:
@@ -86,5 +86,5 @@ volumes:
   ollama: {}
   openedai-speech: {}
   nginx-proxy: {}
-  sd-next: {}
+  sdwebui: {}
 
