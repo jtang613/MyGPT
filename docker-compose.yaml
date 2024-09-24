@@ -1,6 +1,6 @@
 services:
   open-webui:
-    image: ghcr.io/open-webui/open-webui:latest
+    image: ghcr.io/open-webui/open-webui:dev
     restart: always
     environment:
       - 'OLLAMA_BASE_URL=http://ollama:11434'
@@ -31,11 +31,11 @@ services:
             count: all
 
   sdwebui:
-    image: forge:latest
+    image: sdwebui:latest
     restart: always
     volumes:
-      - ${MYGPT_DATA_DIR}/sdwebui/models:/app/stable-diffusion-webui-forge/models/
-      - ${MYGPT_DATA_DIR}/sdwebui/outputs:/app/stable-diffusion-webui-forge/outputs/
+      - ${MYGPT_DATA_DIR}/sdwebui/models:/app/stable-diffusion-webui/models/
+      - ${MYGPT_DATA_DIR}/sdwebui/outputs:/app/stable-diffusion-webui/outputs/
     networks:
       - internal
     deploy:

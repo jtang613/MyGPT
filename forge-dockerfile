@@ -26,6 +26,6 @@ RUN pip install torch=="2.1.2" torchvision torchaudio --index-url https://downlo
 #RUN pip install -r requirements.txt
 
 # Run the script as non-root user
-CMD ["./webui.sh", "--api", "--listen"]
+CMD ["./webui.sh", "--api", "--listen", "--cuda-malloc"]
 
 EXPOSE 7860/tcp

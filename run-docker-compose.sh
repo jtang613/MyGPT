@@ -30,7 +30,7 @@ gen_certs() {
 usage() {
     echo "Usage: $0 [OPTIONS]"
     echo "Options:"
-    echo "  --data[folder=PATH]        Path to the data directory."
+    echo "  --data PATH                Path to the data directory."
     echo "  --drop                     Drop the compose project."
     echo "  -q, --quiet                Run script in headless mode."
     echo "  -h, --help                 Show this help message."
@@ -39,20 +39,21 @@ usage() {
 # Default values
 headless=false
 kill_compose=false
-
-# Function to extract value from the parameter
-extract_value() {
-    echo "$1" | sed -E 's/.*\[.*=(.*)\].*/\1/; t; s/.*//'
-}
+data_dir="./mygpt-data"  # Default data directory
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     key="$1"
 
     case $key in
-        --data*)
-            value=$(extract_value "$key")
-            data_dir=${value:-"./mygpt-data"}
+        --data)
+            if [[ -n $2 && ! $2 == -* ]]; then
+                data_dir="$2"
+                shift # Shift past the value
+            else
+                echo -e "${RED}${BOLD}Error: --data requires a non-empty argument.${NC}"
+                exit 1
+            fi
             ;;
         --drop)
             kill_compose=true
@@ -66,12 +67,12 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             # Unknown option
-            echo "Unknown option: $key"
+            echo -e "${RED}${BOLD}Unknown option:${NC} $key"
             usage
             exit 1
             ;;
     esac
-    shift # past argument or value
+    shift # Past argument or value
 done
 
 if [[ $kill_compose == true ]]; then
@@ -80,10 +81,7 @@ if [[ $kill_compose == true ]]; then
     exit
 else
     DEFAULT_COMPOSE_COMMAND="docker compose -f docker-compose.yaml"
-    export MYGPT_DATA_DIR=$data_dir # Set MYGPT_DATA_DIR environment variable  
-    if [[ -n $data_dir ]]; then
-        export MYGPT_DATA_DIR=$data_dir # Set MYGPT_DATA_DIR environment variable  
-    fi
+    export MYGPT_DATA_DIR="$data_dir" # Set MYGPT_DATA_DIR environment variable
     DEFAULT_COMPOSE_COMMAND+=" up -d"
     DEFAULT_COMPOSE_COMMAND+=" --remove-orphans"
     DEFAULT_COMPOSE_COMMAND+=" --force-recreate"
@@ -108,20 +106,21 @@ echo
 
 if [[ $choice == "" || $choice == "y" ]]; then
     # Create data directories
-    mkdir -p ${MYGPT_DATA_DIR}/open-webui/
-    mkdir -p ${MYGPT_DATA_DIR}/sdwebui/models/
-    mkdir -p ${MYGPT_DATA_DIR}/sdwebui/outputs/
-    mkdir -p ${MYGPT_DATA_DIR}/ollama/
-    mkdir -p ${MYGPT_DATA_DIR}/nginx/
+    mkdir -p "${MYGPT_DATA_DIR}/open-webui/"
+    mkdir -p "${MYGPT_DATA_DIR}/sdwebui/models/"
+    mkdir -p "${MYGPT_DATA_DIR}/sdwebui/outputs/"
+    mkdir -p "${MYGPT_DATA_DIR}/ollama/"
+    mkdir -p "${MYGPT_DATA_DIR}/nginx/"
 
     # Create certs and copy HTTPS proxy config
     gen_certs
-    cp ./certs ${MYGPT_DATA_DIR}/nginx/
-    rm ./certs/*
-    cp ./nginx_proxy.conf ${MYGPT_DATA_DIR}/nginx/
+    cp -r ./certs "${MYGPT_DATA_DIR}/nginx/"
+    rm -rf ./certs/*
+    cp ./nginx_proxy.conf "${MYGPT_DATA_DIR}/nginx/"
 
     # Build SD.Next image
     echo -e "${WHITE}${BOLD}Building Stable Diffusion API image...${NC}"
+    docker build -f forge-dockerfile -t forge:latest .
     docker build -f sd-dockerfile -t sdwebui:latest .
     echo -e "${WHITE}${BOLD}Done.${NC}"
 
@@ -143,7 +142,7 @@ if [[ $choice == "" || $choice == "y" ]]; then
         echo -e "${RED}${BOLD}There was an error starting the compose project.${NC}"
     fi
 else
-    echo "Aborted."
+    echo -e "${RED}${BOLD}Aborted.${NC}"
 fi
 
 echo
