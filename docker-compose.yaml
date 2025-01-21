@@ -1,6 +1,6 @@
 services:
   open-webui:
-    image: ghcr.io/open-webui/open-webui:dev
+    image: ghcr.io/open-webui/open-webui:latest
     restart: always
     environment:
       - 'OLLAMA_BASE_URL=http://ollama:11434'
@@ -9,7 +9,7 @@ services:
       - 'AUDIO_TTS_OPENAI_API_KEY=sk-111111111'
       - 'AUTOMATIC1111_BASE_URL=http://sdwebui:7860'
     volumes:
-      - ${MYGPT_DATA_DIR}/open-webui:/app/backend/data
+      - ${MYGPT_DATA_DIR}/open-webui:/app/backend/data:Z
     networks:
       - internal
     depends_on:
@@ -19,9 +19,12 @@ services:
     image: ollama/ollama:latest
     restart: always
     volumes:
-      - ${MYGPT_DATA_DIR}/ollama:/root/.ollama
+      - ${MYGPT_DATA_DIR}/ollama:/root/.ollama:Z
     networks:
       - internal
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     deploy:
       resources:
         reservations:
@@ -50,8 +53,8 @@ services:
     image: ghcr.io/matatonic/openedai-speech:latest
     restart: always
     volumes:
-      - ${MYGPT_DATA_DIR}/tts/tts-config:/app/config
-      - ${MYGPT_DATA_DIR}/tts/tts-voices:/app/voices
+      - ${MYGPT_DATA_DIR}/tts/tts-config:/app/config:Z
+      - ${MYGPT_DATA_DIR}/tts/tts-voices:/app/voices:Z
     networks:
       - internal
     deploy:
@@ -69,8 +72,8 @@ services:
       - "443:443"
       - "80:80"
     volumes:
-      - ${MYGPT_DATA_DIR}/nginx/nginx_proxy.conf:/etc/nginx/nginx.conf:ro
-      - ${MYGPT_DATA_DIR}/nginx/certs:/etc/nginx/certs:ro
+      - ${MYGPT_DATA_DIR}/nginx/nginx_proxy.conf:/etc/nginx/nginx.conf:ro,Z
+      - ${MYGPT_DATA_DIR}/nginx/certs:/etc/nginx/certs:ro,Z
     depends_on:
       - open-webui
     networks:
